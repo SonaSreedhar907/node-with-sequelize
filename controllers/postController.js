@@ -8,51 +8,62 @@ const path = require('path')
 
 const Post = db.models.Post;
 
+const BaseURL = 'http://localhost:8000'
+
 const create = async (req, res, next) => {
-    try {
-      if (!req.body.title || !req.body.content) {
-        return res
-          .status(400)
-          .json({ message: "Please fill all required fields" });
-      }
-      const existingPost = await Post.findOne({
-        where: { title: req.body.title },
-      });
-      if (existingPost) {
-        return res
-          .status(400)
-          .json({ message: "A post with the same title already exists" });
-      }
-      const slug = req.body.title
-        .split(" ")
-        .join("-")
-        .toLowerCase()
-        .replace(/[^a-zA-Z0-9-]/g, "");
-      const newPost = await Post.create({
-        ...req.body,
-        image:req.file.path,
-        slug,
-        userId: req.user.id,
-      });
-      res.status(201).json(newPost);
-    } catch (error) {
-      console.error("Error in create controller:", error);
-  
-      // Customize the error response based on the error type
-      if (error.name === "SequelizeValidationError") {
-        // Handle validation errors
-        const validationErrors = error.errors.map((err) => ({
-          field: err.path,
-          message: err.message,
-        }));
-        return res.status(400).json({ validationErrors });
-      }
-  
-      // Handle other errors
-      next(error);
+  try {
+    if (!req.body.title || !req.body.content || !req.files) {
+      return res.status(400).json({ message: "Please fill all required fields" });
     }
-  };
+
+    const existingPost = await Post.findOne({
+      where: { title: req.body.title },
+    });
+
+    if (existingPost) {
+      return res.status(400).json({ message: "A post with the same title already exists" });
+    }
+
+    const slug = req.body.title
+      .split(" ")
+      .join("-")
+      .toLowerCase()
+      .replace(/[^a-zA-Z0-9-]/g, "");
+
+const imageUrls = req.files.map(file=>`/Images/${file.filename}`)
+
+    const newPost = await Post.create({
+      ...req.body,
+      image: imageUrls,
+      slug,
+      userId: req.user.id,
+    });
+
+    const postWithUrls = {
+      ...newPost.toJSON(),
+      image: newPost.image.map(ima => `${BaseURL}${ima}`),
+    };
+
+    res.status(201).json(postWithUrls);
+  } catch (error) {
+    console.error("Error in create controller:", error);
+
+    // Customize the error response based on the error type
+    if (error.name === "SequelizeValidationError") {
+      // Handle validation errors
+      const validationErrors = error.errors.map((err) => ({
+        field: err.path,
+        message: err.message,
+      }));
+      return res.status(400).json({ validationErrors });
+    }
+
+    // Handle other errors
+    next(error);
+  }
+};
   
+    
 const getposts = async (req, res, next) => {
   try {
     const posts = await Post.findAll();
@@ -208,28 +219,29 @@ const getsposts = async (req, res, next) => {
 //upload image controller
 
 const storage = multer.diskStorage({
-  destination:(req,file,cb)=>{
-    cb(null,'Images')
+  destination: (req, file, cb) => {
+    cb(null, 'Images');
   },
-  filename :(req,file,cb)=>{
-    cb(null,Date.now()+path.extname(file.originalname))
-  }
-})
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
 
 const upload = multer({
-  storage:storage,
-  limits:{fileSize:'1000000'},
-  fileFilter: (req,file,cb)=>{
-    const fileTypes = /jpeg|jpg|png|gif/
-    const mimeType = fileTypes.test(file.mimetype)
-    const extname = fileTypes.test(path.extname(file.originalname))
+  storage: storage,
+  limits: { fileSize: '1000000' },
+  fileFilter: (req, file, cb) => {
+    console.log(req.body); // Check the request body
+    console.log(req.files); // Check the files in the request
+    const fileTypes = /jpeg|jpg|png|gif/;
+    const mimeType = fileTypes.test(file.mimetype);
+    const extname = fileTypes.test(path.extname(file.originalname));
 
-    if(mimeType && extname){
-      return cb(null,true)
+    if (mimeType && extname) {
+      return cb(null, true);
     }
-    cb('Give proper files format to upload')
-
-  }
-}).single('image')
+    cb('Give proper files format to upload');
+  },
+}).array('image', 3); // 'images' is the field name for multiple files, and 3 is the maximum number of files allowed
 
   module.exports = { create, getposts, deletePost, updatePost, getsposts ,upload };
