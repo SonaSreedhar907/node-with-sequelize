@@ -19,6 +19,10 @@ app.use('/api/post', postRoutes);
 app.use('/api/comment',commentRoutes)
 
 
+//static images folder
+app.use('/Images',express.static('./Images'))
+
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);

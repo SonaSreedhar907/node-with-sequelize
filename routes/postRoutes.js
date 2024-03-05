@@ -5,7 +5,7 @@ const { verifyToken } = require('../utils/verifyUser')
 const router = express.Router()
 
 
-router.post('/create',verifyToken,postController.create)
+router.post('/create',postController.upload,verifyToken,postController.create)
 
 router.get('/getposts',postController.getposts)
 

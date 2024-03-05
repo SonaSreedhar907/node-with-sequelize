@@ -58,7 +58,7 @@ const signup = async (req, res, next) => {
     } catch (error) {
         return next(error);
     }
-};w
+};
 
 
 

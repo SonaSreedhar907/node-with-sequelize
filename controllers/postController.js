@@ -2,6 +2,10 @@ const errorHandler = require("../utils/errorHandler");
 const { db } = require("../models");
 const { Op } = require("sequelize");
 
+//image upload
+const multer = require('multer')
+const path = require('path')
+
 const Post = db.models.Post;
 
 const create = async (req, res, next) => {
@@ -26,6 +30,7 @@ const create = async (req, res, next) => {
         .replace(/[^a-zA-Z0-9-]/g, "");
       const newPost = await Post.create({
         ...req.body,
+        image:req.file.path,
         slug,
         userId: req.user.id,
       });
@@ -198,4 +203,33 @@ const getsposts = async (req, res, next) => {
   }
 };    
 
-  module.exports = { create, getposts, deletePost, updatePost, getsposts };
+
+
+//upload image controller
+
+const storage = multer.diskStorage({
+  destination:(req,file,cb)=>{
+    cb(null,'Images')
+  },
+  filename :(req,file,cb)=>{
+    cb(null,Date.now()+path.extname(file.originalname))
+  }
+})
+
+const upload = multer({
+  storage:storage,
+  limits:{fileSize:'1000000'},
+  fileFilter: (req,file,cb)=>{
+    const fileTypes = /jpeg|jpg|png|gif/
+    const mimeType = fileTypes.test(file.mimetype)
+    const extname = fileTypes.test(path.extname(file.originalname))
+
+    if(mimeType && extname){
+      return cb(null,true)
+    }
+    cb('Give proper files format to upload')
+
+  }
+}).single('image')
+
+  module.exports = { create, getposts, deletePost, updatePost, getsposts ,upload };

@@ -22,9 +22,12 @@ db.models.Comment = require('./comment')(sequelize, Sequelize.DataTypes)
 
 // In your models/index.js
 
-db.models.User.hasMany(db.models.Post, { foreignKey: 'userId', as: 'posts' });
-db.models.Post.belongsTo(db.models.User, { foreignKey: 'userId', as: 'creator' });
+db.models.User.hasMany(db.models.Post, { foreignKey: 'userId', as: 'posts' });   //one-to-many relatioship
+// when you retrieve a user and want to access their posts, you'll use user.posts.
 
+
+db.models.Post.belongsTo(db.models.User, { foreignKey: 'userId', as: 'creator' }); //many-to-one relationship
+// when you retrieve a post and want to access its creator (user), you'll use post.creator.
 
 
 db.models.Comment.belongsTo(db.models.User, {foreignKey:'userId',as : 'user'})
