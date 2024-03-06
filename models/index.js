@@ -19,6 +19,13 @@ db.models = {};
 db.models.User = require('./user')(sequelize, Sequelize.DataTypes);
 db.models.Post = require('./post')(sequelize, Sequelize.DataTypes)
 db.models.Comment = require('./comment')(sequelize, Sequelize.DataTypes)
+db.models.PostImage = require('./postImages')(sequelize, Sequelize.DataTypes)
+
+
+db.models.PostImage.belongsTo(db.models.Post, { foreignKey: 'postId', as: 'postImages' });
+// as: 'postImages' is an alias you provide for the association. 
+// This alias can be used when querying the database to reference this specific association.
+
 
 // In your models/index.js
 

@@ -4,8 +4,9 @@ const db = require('./models');
 const authRoutes = require('./routes/authRoutes')
 const postRoutes = require('./routes/postRoutes')
 const commentRoutes = require('./routes/commentRoutes')
+const postImages = require('./routes/postImageRoute')
 const app = express();
-const cookie = require('cookie-parser')
+const cookie = require('cookie-parser');
 require('dotenv').config();
 
 // Middleware
@@ -17,7 +18,7 @@ app.use(cookie())
 app.use('/api/auth',authRoutes)
 app.use('/api/post', postRoutes);
 app.use('/api/comment',commentRoutes)
-
+app.use('/api/postimage',postImages)
 
 //static images folder
 app.use('/Images',express.static('./Images'))
